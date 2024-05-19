@@ -1,0 +1,66 @@
+def test_custom_norecursedirs(pytester: Pytester) -> None:
+    pytester.makeini("[pytest]\nnorecursedirs = mydir xyz*")
+    tmp_path = pytester.path
+    ensure_file(tmp_path / "mydir" / "test_hello.py").write_text(
+        "def test_1(): pass", encoding="utf-8"
+    )
+    ensure_file(tmp_path / "xyz123" / "test_2.py").write_text(
+        "def test_2(): 0/0", encoding="utf-8"
+    )
+    ensure_file(tmp_path / "xy" / "test_ok.py").write_text(
+        "def test_3(): pass", encoding="utf-8"
+    )
+    rec = pytester.inline_run()
+    rec.assertoutcome(passed=1)
+    rec = pytester.inline_run("xyz123/test_2.py")
+    rec.assertoutcome(failed=1)
+
+def test_testpaths_ini(pytester: Pytester, monkeypatch: MonkeyPatch) -> None:
+    pytester.makeini("[pytest]\ntestpaths = */tests")
+    tmp_path = pytester.path
+    ensure_file(tmp_path / "a" / "test_1.py").write_text(
+        "def test_a(): pass", encoding="utf-8"
+    )
+    ensure_file(tmp_path / "b" / "tests" / "test_2.py").write_text(
+        "def test_b(): pass", encoding="utf-8"
+    )
+    ensure_file(tmp_path / "c" / "tests" / "test_3.py").write_text(
+        "def test_c(): pass", encoding="utf-8"
+    )
+
+    items, reprec = pytester.inline_genitems("-v")
+    assert [x.name for x in items] == ["test_b", "test_c"]
+
+    for dirname in ("a", "b", "c"):
+        items, reprec = pytester.inline_genitems(tmp_path.joinpath(dirname))
+        assert [x.name for x in items] == [f"test_{dirname}"]
+
+    for dirname in ("a", "b", "c"):
+        monkeypatch.chdir(pytester.path.joinpath(dirname))
+        items, reprec = pytester.inline_genitems()
+        assert [x.name for x in items] == [f"test_{dirname}"]
+
+def test_missing_permissions_on_unselected_directory_doesnt_crash(
+    pytester: Pytester
+) -> None:
+    test = pytester.makepyfile(test="def test(): pass")
+    bad = pytester.mkdir("bad")
+    try:
+        bad.chmod(0)
+
+        result = pytester.runpytest(test)
+    finally:
+        bad.chmod(750)
+        bad.rmdir()
+
+    assert result.ret == ExitCode.OK
+    result.assert_outcomes(passed=1)
+The output-----
+==================================== test session starts ====================================
+platform linux -- Python 3.8.10, pytest-6.2.4, pluggy-0.13.1
+
+collected 3 items
+
+test_module.py ...                                                                    [100%]
+
+===================================== 3 passed in 0.12s =====================================
