@@ -1,6 +1,5 @@
 === test session starts ===
 platform darwin -- Python 3.x.x, pytest-x.x.x, py-x.x.x, pluggy-x.x.x
-rootdir: /desktop/assus/ismail/py/
 collected 2 items
 
 test_prepend_pythonpath.py ..                     [100%]
@@ -8,7 +7,7 @@ test_prepend_pythonpath.py ..                     [100%]
 == 2 passed in 0.03s ===
 == test session starts ====
 platform darwin -- Python 3.x.x, pytest-x.x.x, py-x.x.x, pluggy-x.x.x
-rootdir: /desktop/assus/ismail/py
+
 collected 2 items
 
 test_prepend_pythonpath.py F.                                          [ 50%]
