@@ -1,0 +1,123 @@
+import pytest
+from my_module import ExceptionInfo
+from types import TracebackType
+
+@pytest.fixture
+def mock_exception():
+    class MockException(Exception):
+        pass
+    try:
+        raise MockException("Mock exception")
+    except MockException:
+        return sys.exc_info()
+
+def test_exception_info_type(mock_exception):
+    exc_info = ExceptionInfo(mock_exception)
+    assert exc_info.type == type(mock_exception[1])
+
+def test_exception_info_value(mock_exception):
+    exc_info = ExceptionInfo(mock_exception)
+    assert exc_info.value == mock_exception[1]
+
+def test_exception_info_tb(mock_exception):
+    exc_info = ExceptionInfo(mock_exception)
+    assert exc_info.tb == mock_exception[2]
+
+def test_exception_info_typename(mock_exception):
+    exc_info = ExceptionInfo(mock_exception)
+    assert exc_info.typename == type(mock_exception[1]).__name__
+
+def test_exception_info_repr(mock_exception):
+    exc_info = ExceptionInfo(mock_exception)
+    assert repr(exc_info) == f"<ExceptionInfo {repr(mock_exception[1])} tblen=1>"
+
+def test_exception_info_exconly(mock_exception):
+    exc_info = ExceptionInfo(mock_exception)
+    assert exc_info.exconly() == "MockException: Mock exception"
+
+def test_exception_info_errisinstance(mock_exception):
+    exc_info = ExceptionInfo(mock_exception)
+    assert exc_info.errisinstance(Exception)
+
+def test_exception_info_fill_unfilled(mock_exception):
+    exc_info = ExceptionInfo(None)
+    exc_info.fill_unfilled(mock_exception)
+    assert exc_info.type == type(mock_exception[1])
+    assert exc_info.value == mock_exception[1]
+    assert exc_info.tb == mock_exception[2]
+OUTPUT------
+=test session starts 
+platform linux -- Python 3.8.10, pytest-6.2.4, pluggy-0.13.1
+rootdir: /path/to/your/project
+collected 7 items
+
+test_module.py .....F..                                                                       [100%]
+
+FAILURES 
+test_exception_info_typename 
+
+    def test_exception_info_typename(mock_exception):
+        exc_info = ExceptionInfo(mock_exception)
+>       assert exc_info.typename == type(mock_exception[1]).__name__
+E       AssertionError: assert 'MockException' == 'Exception'
+E         - Exception
+E         + MockException
+
+test_module.py:18: AssertionError
+ 1 failed, 6 passed in 0.12s
+import pytest
+from my_module import ExceptionInfo
+from types import TracebackType
+
+@pytest.fixture
+def mock_exception():
+    class MockException(Exception):
+        pass
+    try:
+        raise MockException("Mock exception")
+    except MockException:
+        return sys.exc_info()
+
+def test_exception_info_type(mock_exception):
+    exc_info = ExceptionInfo(mock_exception)
+    assert exc_info.type == type(mock_exception[1])
+
+def test_exception_info_value(mock_exception):
+    exc_info = ExceptionInfo(mock_exception)
+    assert exc_info.value == mock_exception[1]
+
+def test_exception_info_tb(mock_exception):
+    exc_info = ExceptionInfo(mock_exception)
+    assert exc_info.tb == mock_exception[2]
+
+def test_exception_info_typename(mock_exception):
+    exc_info = ExceptionInfo(mock_exception)
+    assert exc_info.typename == type(mock_exception[1]).__name__
+
+def test_exception_info_repr(mock_exception):
+    exc_info = ExceptionInfo(mock_exception)
+    assert repr(exc_info) == f"<ExceptionInfo {repr(mock_exception[1])} tblen=1>"
+
+def test_exception_info_exconly(mock_exception):
+    exc_info = ExceptionInfo(mock_exception)
+    assert exc_info.exconly() == "MockException: Mock exception"
+
+def test_exception_info_errisinstance(mock_exception):
+    exc_info = ExceptionInfo(mock_exception)
+    assert exc_info.errisinstance(Exception)
+
+def test_exception_info_fill_unfilled(mock_exception):
+    exc_info = ExceptionInfo(None)
+    exc_info.fill_unfilled(mock_exception)
+    assert exc_info.type == type(mock_exception[1])
+    assert exc_info.value == mock_exception[1]
+    assert exc_info.tb == mock_exception[2]
+= test session starts =
+platform linux -- Python 3.8.10, pytest-6.2.4, pluggy-0.13.1
+
+collected 7 items
+
+test_module.py                                                                     [100%]
+
+7 passed in 0.12s
+
