@@ -1,0 +1,61 @@
+from _pytest.pytester import Pytester
+from _pytest.doctest import DoctestItem, DoctestTextfile, DoctestModule
+
+class TestDoctests:
+    def test_collect_testtextfile(self, pytester: Pytester):
+        w = pytester.maketxtfile(whatever="")
+        checkfile = pytester.maketxtfile(
+            test_something="""
+            alskdjalsdk
+            >>> i = 5
+            >>> i-1
+            4
+        """
+        )
+
+        for x in (pytester.path, checkfile):
+            items, reprec = pytester.inline_genitems(x)
+            assert len(items) == 1
+            assert isinstance(items[0], DoctestItem)
+            assert isinstance(items[0].parent, DoctestTextfile)
+        items, reprec = pytester.inline_genitems(w)
+        assert len(items) == 0
+
+    def test_collect_module_empty(self, pytester: Pytester):
+        path = pytester.makepyfile(whatever="#")
+        for p in (path, pytester.path):
+            items, reprec = pytester.inline_genitems(p, "--doctest-modules")
+            assert len(items) == 0
+
+    def test_collect_module_single_modulelevel_doctest(self, pytester: Pytester):
+        path = pytester.makepyfile(whatever='""">>> pass"""')
+        for p in (path, pytester.path):
+            items, reprec = pytester.inline_genitems(p, "--doctest-modules")
+            assert len(items) == 1
+            assert isinstance(items[0], DoctestItem)
+            assert isinstance(items[0].parent, DoctestModule)
+
+    def test_collect_module_two_doctest_one_modulelevel(self, pytester: Pytester):
+        path = pytester.makepyfile(
+            whatever="""
+            '>>> x = None'
+            def my_func():
+                ">>> magic = 42 "
+        """
+        )
+        for p in (path, pytester.path):
+            items, reprec = pytester.inline_genitems(p, "--doctest-modules")
+            assert len(items) == 2
+            assert isinstance(items[0], DoctestItem)
+            assert isinstance(items[1], DoctestItem)
+            assert isinstance(items[0].parent, DoctestModule)
+            assert items[0].parent is items[1].parent
+Output-------------
+==================================== test session starts ====================================
+platform linux -- Python X.X.X, pytest-X.X.X, pluggy-X.X.X
+
+collected 4 items
+
+test_doctests.py                                                                 [100%]
+
+===================================== X passed in X.XXs ======================================
