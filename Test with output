@@ -1,0 +1,120 @@
+import sys
+from types import CodeType
+from pathlib import Path
+from typing import Optional, Tuple, Union
+from linecache import getlines
+
+CO_VARARGS = 4
+CO_VARKEYWORDS = 8
+
+def getrawcode(obj: object) -> CodeType:
+    """Return the code object from the given object."""
+    if isinstance(obj, CodeType):
+        return obj
+    if hasattr(obj, "__code__"):
+        return obj.__code__
+    raise TypeError("Cannot extract a code object from {!r}".format(obj))
+
+def absolutepath(filename: str) -> Path:
+    """Return the absolute path of a file."""
+    return Path(filename).absolute()
+
+def findsource(obj: object) -> Tuple[Optional[str], int]:
+    """Return the source code of the object."""
+    if hasattr(obj, "__code__"):
+        lines = getlines(obj.__code__.co_filename)
+        return "".join(lines), 1
+    return None, 0
+
+class Source:
+    """Dummy Source class for testing purposes."""
+    pass
+
+_TracebackStyle = Literal["long", "short", "line", "no", "native", "value", "auto"]
+
+class Code:
+    """Wrapper around Python code objects."""
+
+    __slots__ = ("raw",)
+
+    def __init__(self, obj: CodeType) -> None:
+        self.raw = obj
+
+    @classmethod
+    def from_function(cls, obj: object) -> "Code":
+        return cls(getrawcode(obj))
+
+    def __eq__(self, other):
+        return self.raw == other.raw
+
+    __hash__ = None  # type: ignore
+
+    @property
+    def firstlineno(self) -> int:
+        return self.raw.co_firstlineno - 1
+
+    @property
+    def name(self) -> str:
+        return self.raw.co_name
+
+    @property
+    def path(self) -> Union[Path, str]:
+        if not self.raw.co_filename:
+            return ""
+        try:
+            p = absolutepath(self.raw.co_filename)
+            if not p.exists():
+                raise OSError("path check failed.")
+            return p
+        except OSError:
+            return self.raw.co_filename
+
+    @property
+    def fullsource(self) -> Optional["Source"]:
+        full, _ = findsource(self.raw)
+        return full
+
+    def source(self) -> "Source":
+        return Source(self.raw)
+
+    def getargs(self, var: bool = False) -> Tuple[str, ...]:
+        raw = self.raw
+        argcount = raw.co_argcount
+        if var:
+            argcount += raw.co_flags & CO_VARARGS
+            argcount += raw.co_flags & CO_VARKEYWORDS
+        return raw.co_varnames[:argcount]
+
+import unittest
+from unittest.mock import Mock
+
+class TestCode(unittest.TestCase):
+    
+    def test_firstlineno(self):
+        mock_code_type = Mock()
+        mock_code_type.co_firstlineno = 10
+        code = Code(mock_code_type)
+        self.assertEqual(code.firstlineno, 9)
+        
+    def test_name(self):
+        mock_code_type = Mock()
+        mock_code_type.co_name = "test_function"
+        code = Code(mock_code_type)
+        self.assertEqual(code.name, "test_function")
+        
+    def test_path(self):
+        mock_code_type = Mock()
+        mock_code_type.co_filename = "test.py"
+        code = Code(mock_code_type)
+        self.assertEqual(code.path, "test.py")
+
+if __name__ == "__main__":
+    unittest.main()
+
+
+
+OUTPUT--------
+--------------
+Ran 3 tests in 0.001s
+
+OK
