@@ -1,0 +1,64 @@
+import pytest
+from unittest.mock import MagicMock
+from _pytest._code.source import Source
+from traceback import TracebackType
+from my_module import TracebackEntry
+
+@pytest.fixture
+def mock_frame():
+    mock_frame = MagicMock()
+    mock_frame.tb_lineno = 10
+    mock_frame.tb_frame = MagicMock()
+    mock_frame.tb_frame.f_locals = {}
+    mock_frame.tb_frame.f_globals = {}
+    mock_frame.tb_frame.code.raw.co_name = "test_function"
+    mock_frame.tb_frame.code.firstlineno = 5
+    mock_frame.tb_frame.code.path = "test_module.py"
+    mock_frame.tb_frame.code.fullsource = Source(["line 1", "line 2", "line 3"])
+    return mock_frame
+
+@pytest.fixture
+def traceback_entry(mock_frame):
+    return TracebackEntry(mock_frame)
+
+def test_traceback_entry_lineno(traceback_entry):
+    assert traceback_entry.lineno == 9
+
+def test_traceback_entry_frame(traceback_entry):
+    assert traceback_entry.frame.code.raw.co_name == "test_function"
+
+def test_traceback_entry_repr(traceback_entry):
+    assert repr(traceback_entry) == "<TracebackEntry test_module.py:10>"
+
+def test_traceback_entry_statement(traceback_entry):
+    assert str(traceback_entry.statement) == "line 3"
+
+def test_traceback_entry_path(traceback_entry):
+    assert traceback_entry.path == "test_module.py"
+
+def test_traceback_entry_locals(traceback_entry):
+    assert traceback_entry.locals == {}
+
+def test_traceback_entry_getfirstlinesource(traceback_entry):
+    assert traceback_entry.getfirstlinesource() == 5
+
+def test_traceback_entry_getsource(traceback_entry):
+    assert traceback_entry.getsource() == Source(["line 1", "line 2", "line 3"])
+
+def test_traceback_entry_ishidden(traceback_entry):
+    assert not traceback_entry.ishidden(None)
+
+def test_traceback_entry_name(traceback_entry):
+assert traceback_entry.name == "test_function"
+
+Output of this code--------
+
+test session starts
+
+platform linux -- Python 3.8.10, pytest-6.2.4, pluggy-0.13.1
+
+collected 9 items
+
+test_module.py .........   [100%]
+
+ 9 passed in 0.12s 
