@@ -1,0 +1,30 @@
+=== test session starts ===
+platform darwin -- Python 3.x.x, pytest-x.x.x, py-x.x.x, pluggy-x.x.x
+rootdir: /path/to/your/project
+collected 2 items
+
+test_prepend_pythonpath.py ..                     [100%]
+
+== 2 passed in 0.03s ===
+== test session starts ====
+platform darwin -- Python 3.x.x, pytest-x.x.x, py-x.x.x, pluggy-x.x.x
+rootdir: /path/to/your/project
+collected 2 items
+
+test_prepend_pythonpath.py F.                                          [ 50%]
+
+===== FAILURES ====
+test_prepend_pythonpath_with_existing
+
+    def test_prepend_pythonpath_with_existing():
+        existing_path = "existing_dir"
+        dirs = ["dir1", "dir2", "dir3"]
+        expected = os.pathsep.join(dirs + [existing_path])
+        os.environ["PYTHONPATH"] = existing_path
+>       assert prepend_pythonpath(*dirs) == expected
+E       AssertionError: assert 'dir1:dir2:dir3' == 'dir1:dir2:dir3:existing_dir'
+E         - dir1:dir2:dir3
+E         + dir1:dir2:dir3:existing_dir
+
+test_prepend_pythonpath.py:11: AssertionError
+ 1 failed, 1 passed in 0.03s 
