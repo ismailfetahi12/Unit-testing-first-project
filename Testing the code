@@ -1,0 +1,14 @@
+import os
+from your_module import prepend_pythonpath
+
+def test_prepend_pythonpath_no_existing():
+    dirs = ["dir1", "dir2", "dir3"]
+    expected = os.pathsep.join(dirs)
+    assert prepend_pythonpath(*dirs) == expected
+
+def test_prepend_pythonpath_with_existing():
+    existing_path = "existing_dir"
+    dirs = ["dir1", "dir2", "dir3"]
+    expected = os.pathsep.join(dirs + [existing_path])
+    os.environ["PYTHONPATH"] = existing_path
+    assert prepend_pythonpath(*dirs) == expected
